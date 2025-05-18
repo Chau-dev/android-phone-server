@@ -1,0 +1,117 @@
+##
+# Reference Resources for Nginx Configuration
+# These URLs provide essential guidance for understanding and optimizing Nginx.
+# - https://www.nginx.com/resources/wiki/start/ : General Nginx documentation.
+# - https://www.nginx.com/resources/wiki/start/topics/tutorials/config_pitfalls/ : Common configuration mistakes to avoid.
+# - https://wiki.debian.org/Nginx/DirectoryStructure : Debian-specific Nginx directory structure.
+#
+# Note: This file is typically removed from /etc/nginx/sites-enabled/ and kept in
+# /etc/nginx/sites-available/ as a reference. It may be updated by the Nginx package.
+# Other applications (e.g., Drupal, WordPress) can add configs under paths like /drupal8.
+# See /usr/share/doc/nginx-doc/examples/ for advanced examples.
+##
+
+# Default server block for handling HTTP requests
+server {
+        # Listen on port 8080 for IPv4 requests, marking this as the default server
+        # (handles requests when no other server block matches)
+        listen 8080 default_server;
+        # Listen on port 8080 for IPv6 requests, also as the default server
+        listen [::]:8080 default_server;
+
+        # SSL Configuration (commented out, not active)
+        # These settings would enable HTTPS on port 443 if uncommented
+        # listen 443 ssl default_server;           # IPv4 SSL
+        # listen [::]:443 ssl default_server;     # IPv6 SSL
+        #
+        # Notes on SSL:
+        # - Disable gzip for SSL to avoid issues (see https://bugs.debian.org/773332).
+        # - Use secure ciphers (see https://bugs.debian.org/765782).
+        # - Self-signed certs (e.g., from ssl-cert package) are insecure for production.
+        # - Include snakeoil.conf for self-signed certs (not recommended for production).
+        # include snippets/snakeoil.conf;
+
+        # Root directory (commented out, not used)
+        # If active, would serve files from /var/www/html for unmatched locations
+        # root /var/www/html;
+
+        # Define default index files to serve when a directory is requested
+        # Tries index.html, index.htm, then index.nginx-debian.html
+        index index.html index.htm index.nginx-debian.html;
+
+        # Server name (underscore means catch-all, matches any hostname)
+        server_name _;
+
+        # Log access requests to this file for monitoring
+        access_log /var/log/nginx/node-access.log;
+        # Log errors with debug level for detailed troubleshooting
+        error_log /var/log/nginx/node-error.log debug;
+
+        # Location block for all requests (root path and subpaths, except /test/)
+        location / {
+                # Attempt to serve requests (commented out, not active)
+                # Would try to serve as a file, then directory, or return 404
+                # try_files $uri $uri/ =404;
+
+                # Add a custom header to indicate proxying to Node.js
+                add_header X-Debug-Message "Proxying to Node.js" always;
+                # Proxy requests to Node.js backend running on localhost:3000
+                proxy_pass http://127.0.0.1:3000;
+                # Use HTTP/1.1 for proxying (supports keep-alive, WebSockets)
+                proxy_http_version 1.1;
+                # Pass WebSocket headers for real-time connections
+                proxy_set_header Upgrade $http_upgrade;
+                proxy_set_header Connection 'upgrade';
+                # Pass the original Host header to Node.js
+                proxy_set_header Host $host;
+                # Pass client’s real IP address
+                proxy_set_header X-Real-IP $remote_addr;
+                # Pass forwarded IP chain
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                # Pass the protocol (http or https)
+                proxy_set_header X-Forwarded-Proto $scheme;
+                # Bypass cache for WebSocket upgrades
+                proxy_cache_bypass $http_upgrade;
+                # Timeout settings for proxying
+                proxy_connect_timeout 10;    # Max time to connect to Node.js (10s)
+                proxy_send_timeout 30;       # Max time to send data (30s)
+                proxy_read_timeout 30;       # Max time to read response (30s)
+        }
+
+        # PHP Configuration (commented out, not active)
+        # Would process .php files if PHP-FPM or CGI is configured
+        # location ~ \.php$ {
+        #       include snippets/fastcgi-php.conf;
+        #       # Use PHP-FPM unix socket
+        #       fastcgi_pass unix:/run/php/php7.4-fpm.sock;
+        #       # Or use TCP socket
+        #       fastcgi_pass 127.0.0.1:9000;
+        # }
+
+        # Location block for /test/ path (serves attendance website frontend)
+        location /test/ {
+            # Serve files from /var/www/html/test/
+            root /var/www/html;
+            # Default file to serve (index.html)
+            index index.html;
+        }
+
+        # Deny .htaccess files (commented out, not active)
+        # Prevents access to Apache .htaccess files for security
+        # location ~ /\.ht {
+        #       deny all;
+        # }
+}
+
+# Example Virtual Host (commented out, not active)
+# Demonstrates a separate server block for a domain (example.com)
+# server {
+#       listen 80;                      # Listen on port 80 (HTTP)
+#       listen [::]:80;                 # IPv6
+#       server_name example.com;        # Match requests for example.com
+#       root /var/www/example.com;      # Serve files from this directory
+#       index index.html;               # Default file
+#       location / {
+#               try_files $uri $uri/ =404;     # Serve file, directory, or 404
+#       }
+# }
