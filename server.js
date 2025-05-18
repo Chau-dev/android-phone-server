@@ -33,7 +33,7 @@ app.post('/api/attendance', (req, res) => {
        res.json({ success: true });
    });
 });
-// Get attendance
+// Get attendance k
 app.get('/api/attendance', (req, res) => {
    db.query('SELECT a.id, a.student_id, s.name, a.date, a.status FROM attendance a JOIN students s ON a.student_id = s.id', (err, results) => {
        if (err) return res.status(500).json({ error: 'Database error' });
