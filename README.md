@@ -119,5 +119,19 @@ ________________________________________________________________________________
 _________________________________________________________________________________________
 INSTALLING NGROK FOR CONNECTING TO ALL NETWORKS
 _________________________________________________________________________________________
-
+Inside the debian container 
+1.apt update
+2.apt isntall wget unzip
+3.wget https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-arm64.tgz
+4.tar -xzvf ngrok-v3-stable-linux-arm64.tgz
+5.mv ngrok /usr/local/bin/
+6.chmod +x /usr/local/bin/ngrok
+7.You have to sign up for free ngrok account @ngrok.com 
+  you get an "your authtoken" in the dashboard of ngrok website after login copy that
+8.ngrok authtoken <your authtoken must be pasted here>
+9.ngrok http <your port set by you >      a link will be provided to you copy that 
+____________________________________________________________________________________________
+ensure mysql ,nginx,ngrok,and the backend is running check it first if not running the run it
+then use copy the ngrok link provided followed by /test/ in above code used frontend written there
   
+
